@@ -44,14 +44,11 @@ async def run_application():
     client_session = aiohttp.ClientSession(skip_auto_headers=['Accept-Encoding'])
 
     async def handle(request):
-        proxy_url_path = (
-            request.url.path if request.url.path.startswith('/_plugin/kibana') else f'/_plugin/kibana{request.url.path}'
-        )
-        url = kibana_url.with_path(proxy_url_path)
+        url = kibana_url.with_path(request.url.path)
         request_body = await request.read()
         headers = {
             header: request.headers[header]
-            for header in ['Kbn-Xsrf', 'Kbn-Version', 'Content-Type']
+            for header in ['osd-xsrf', 'osd-version', 'Content-Type']
             if header in request.headers
         }
 
@@ -144,7 +141,7 @@ def authenticate_by_staff_sso(client_session, base, client_id, client_secret):
     async def _authenticate_by_sso(request, handler):
         # Workaround https://web.dev/add-manifest/#link-manifest where cookies are not sent by
         # default for manifests
-        if request.path == '/ui/favicons/manifest.json':
+        if request.path == '/_dashboards/ui/favicons/manifest.json':
             request['me_profile'] = {'email': '---cookies-not-sent-for-manifest---'}
             return await handler(request)
 
